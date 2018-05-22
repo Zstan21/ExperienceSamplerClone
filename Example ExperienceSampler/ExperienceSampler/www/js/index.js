@@ -270,6 +270,7 @@ var timePickerTmpl = "<li><input id ='{{id}}' type='time'></input><br /><br /></
 var lastPageTmpl = "<h3>{{message}}</h3>";
 var uniqueKey; 
 var name;
+var bgLocationServices;
 
 var app = {
     // Application Constructor
@@ -534,6 +535,23 @@ init: function() {
         app.renderQuestion(0);
     }
     localStore.snoozed = 0;
+	navigator.geolocation.getCurrentPosition(function() {
+		console.log("Successfully retreived our GPS position, we can now start our background tracker.");
+	}, function(error) {
+		console.error(error);
+	});
+	bgLocationServices = window.plugins.backgroundLocationServices;
+	bgLocationServices.configure({
+		desiredAccuracy: 20,
+		distanceFilter: 10,
+		debug: true,
+		interval: 20000,
+		useActivityDetection: true,
+		
+		notificationTitle: 'BG Location Plugin',
+		notificationText: 'Tracking',
+		fastestInterval: 10000
+	});
 },
     
 sampleParticipant: function() {
@@ -683,6 +701,21 @@ scheduleNotifs:function() {
         	localStore['notification_' + i + '_5'] = localStore.participant_id + "_" + e + "_" + date5;
         	localStore['notification_' + i + '_6'] = localStore.participant_id + "_" + f + "_" + date6;
         	}
+			
+	bgLocationServices.registerForLocationUpdates(function(location) {
+		var location1 = [41.393922, -81.444035];
+		var location2 = [41.571300, -81.327029];
+		
+		var targetLocations = [location1, location2];
+		var i;
+		
+		for(i = 0; i < targetLocations.length, i++) {
+			var Float = Java.type("float");
+			var results = new Float(1);
+			location.distanceBetween(targetLocations[i][0], targetLocations[i][1], this.getLatitude(), this.getLongitude(), results);
+			if(results[0] <= 10.0) {
+				//Push Cordova notification
+				//Test this, have no idea if it works
 },
 snoozeNotif:function() {
     var now = new Date().getTime(), snoozeDate = new Date(now + 600*1000);
